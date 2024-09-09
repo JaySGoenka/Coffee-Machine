@@ -1,12 +1,12 @@
-## Coffee Machine Project
+# Coffee Machine Project
 
 This project is a Python-based graphical coffee machine simulator. It allows users to choose from various coffee drinks, customize their orders with add-ons, and calculate the total cost. The system also keeps track of ingredient resources and allows for manager-level access to check revenue and refill resources.
 
-# Motivation
+## Motivation
 
 This mini project was inspired by my daily coffee routine during my internship. Each morning and evening, I would grab a cup of coffee, which fueled me to tackle my daily tasks. I wanted to recreate that experience with a fun and interactive coffee machine simulator, using Python to make the process feel both nostalgic and productive.
 
-# Features
+## Features
 
 - Graphical User Interface: Built with tkinter, allowing easy navigation and interaction.
 - Menu Items: Offers coffee options like Espresso, Latte, Cappuccino, Americano, and Mocha.
