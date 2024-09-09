@@ -1,69 +1,7 @@
-
 import tkinter as tk
 from tkinter import simpledialog, messagebox
-
-MENU = {
-    "espresso": {
-        "ingredients": {
-            "water": 50,
-            "coffee": 18,
-        },
-        "cost": 1.5,
-    },
-    "latte": {
-        "ingredients": {
-            "water": 200,
-            "milk": 150,
-            "coffee": 24,
-        },
-        "cost": 2.5,
-    },
-    "cappuccino": {
-        "ingredients": {
-            "water": 250,
-            "milk": 100,
-            "coffee": 24,
-        },
-        "cost": 3.0,
-    },
-    "americano": {
-        "ingredients": {
-            "water": 300,
-            "coffee": 18,
-        },
-        "cost": 2.0,
-    },
-    "mocha": {
-        "ingredients": {
-            "water": 100,
-            "milk": 150,
-            "coffee": 24,
-            "chocolate": 20,
-        },
-        "cost": 3.5,
-    }
-}
-
-ADD_ONS = {
-    "whipped cream": 0.5,
-    "caramel": 0.3,
-    "extra shot": 0.7,
-    "vanilla syrup": 0.4,
-}
-
-profit = 0
-password = "Manager2024@shop"
-
-resources = {
-    "water": 1000,
-    "milk": 1000,
-    "coffee": 500,
-    "chocolate": 50,
-    "whipped cream": 50,
-    "caramel": 40,
-    "extra shot": 50,
-    "vanilla syrup": 30,
-}
+from menu import MENU, ADD_ONS, resources, password
+from management import is_resource_sufficient, is_transaction_successful, make_coffee, generate_report
 
 class CoffeeMachine:
     def __init__(self, root):
@@ -168,28 +106,31 @@ class CoffeeMachine:
                 pass
         self.money_inserted.set(total)
 
-    def is_resource_sufficient(self, order_ingredients):
-        for item in order_ingredients:
-            if order_ingredients[item] > resources.get(item, 0):
-                messagebox.showinfo("Resource Error", f"Sorry there is not enough {item}.")
-                return False
-        return True
+    def order(self):
+        drink = self.selected_drink.get()
+        drink_ingredients = MENU[drink]["ingredients"].copy()
+        
+        if self.customize_var.get():
+            for k, v in self.custom_ingredients.items():
+                drink_ingredients[k] = v.get()
 
-    def is_transaction_successful(self, money_received, drink_cost):
-        global profit
-        if money_received >= drink_cost:
-            change = round(money_received - drink_cost, 2)
-            messagebox.showinfo("Transaction Successful", f"Here is ${change} in change.")
-            profit += drink_cost
-            return True
+        if is_resource_sufficient(drink_ingredients):
+            add_ons_cost = sum(ADD_ONS[add_on] * self.selected_add_ons[add_on].get() for add_on in ADD_ONS)
+            total_cost = MENU[drink]["cost"] + add_ons_cost
+            money_received = self.money_inserted.get()
+            if is_transaction_successful(money_received, total_cost):
+                make_coffee(drink, drink_ingredients)
+                self.clear_selection()
         else:
-            messagebox.showinfo("Transaction Failed", "Sorry that's not enough money. Money refunded.")
-            return False
+            messagebox.showinfo("Insufficient Resources", "Sorry, there are insufficient resources to make your drink.")
 
-    def make_coffee(self, drink_name, order_ingredients):
-        for item in order_ingredients:
-            resources[item] -= order_ingredients[item]
-        messagebox.showinfo("Enjoy", f"Here is your {drink_name} ☕️. Enjoy!")
+    def report(self):
+        password_in = simpledialog.askstring("Password", "Please enter the password to view the report: ")
+        if password_in == password:
+            report = generate_report()
+            messagebox.showinfo("Report", report)
+        else:
+            messagebox.showinfo("Unauthorized", "Only Authorized Users can access the report")
 
     def clear_selection(self):
         self.selected_drink.set("espresso")
@@ -202,46 +143,6 @@ class CoffeeMachine:
         for widget in self.custom_ingredients_frame.winfo_children():
             widget.destroy()
         self.update_selection()
-
-    def order(self):
-        drink = self.selected_drink.get()
-        drink_ingredients = MENU[drink]["ingredients"].copy()
-        
-        # Update with custom ingredients if customization is enabled
-        if self.customize_var.get():
-            for k, v in self.custom_ingredients.items():
-                drink_ingredients[k] = v.get()
-
-        if self.is_resource_sufficient(drink_ingredients):
-            add_ons_cost = sum(ADD_ONS[add_on] * self.selected_add_ons[add_on].get() for add_on in ADD_ONS)
-            total_cost = MENU[drink]["cost"] + add_ons_cost
-            money_received = self.money_inserted.get()
-            if self.is_transaction_successful(money_received, total_cost):
-                self.make_coffee(drink, drink_ingredients)
-                for add_on in ADD_ONS:
-                    if self.selected_add_ons[add_on].get():
-                        resources[add_on] -= self.selected_add_ons[add_on].get()
-                self.clear_selection()
-        else:
-            messagebox.showinfo("Insufficient Resources", "Sorry, there are insufficient resources to make your drink.")
-
-    def report(self):
-        password_in = simpledialog.askstring("Password", "Please enter the password to view the report: ")
-        if password_in == password:
-            report = (
-                f"Water: {resources['water']}ml\n"
-                f"Milk: {resources['milk']}ml\n"
-                f"Coffee: {resources['coffee']}g\n"
-                f"Chocolate: {resources['chocolate']}g\n"
-                f"Whipped Cream: {resources['whipped cream']}g\n"
-                f"Caramel: {resources['caramel']}g\n"
-                f"Extra Shot: {resources['extra shot']}g\n"
-                f"Vanilla Syrup: {resources['vanilla syrup']}ml\n"
-                f"Money: ${profit}"
-            )
-            messagebox.showinfo("Report", report)
-        else:
-            messagebox.showinfo("Unauthorized", "Only Authorized Users can access the report")
 
 if __name__ == "__main__":
     root = tk.Tk()
